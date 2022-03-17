@@ -17,6 +17,8 @@ class KanyeQuoteAPI
 
     public int $reqQuotes;
 
+    public Collection $response;
+    
     public function __construct() 
     {
         $this->url = config('services.kanye.url');
@@ -36,23 +38,11 @@ class KanyeQuoteAPI
         }
     }
 
-    private function sendRequest($endpoint, $batch = false)
-    {
-        return match($batch){
-            true => $this->sendMultiRequest($endpoint),
-            false => $this->sendSingleRequest($endpoint)
-        };
-    }
-    
-    private function sendSingleRequest($endpoint) : Response 
-    {
-        return $this->client->get($endpoint);
-    }
-
-    private function sendMultiRequest($endpoint) : Collection
+    private function sendRequest() : self
     {
         $total = $this->reqQuotes;
-        $client = new Client();
+        $client = $this->client;
+        $endpoint = $this->url;
 
         $requests = function ($total) use ($endpoint){
             for ($i = 0; $i < $total; $i++) {
@@ -60,8 +50,11 @@ class KanyeQuoteAPI
             }
         };
 
-        $response = Pool::batch($client,$requests($total),['concurrency' => 5]);
-        return $this->processMultiResponse($response);
+        $response =  Pool::batch($client, $requests($total), ['concurrency' => 5]);
+        
+        $this->response = $this->processMultiResponse($response);
+
+        return $this;
     }
 
     /**
@@ -75,11 +68,11 @@ class KanyeQuoteAPI
         return collect($items)->map(fn($q)=> json_decode($q->getBody())->quote);
     }
 
-    public function randomizer(/*Int $quote*/) 
+    public function randomizer(int $total) 
     {
-        $this->reqQuotes = 5; 
-
-        $result = $this->sendRequest($this->url, true);
-        dd($result);
+        $this->reqQuotes = $total; 
+        $this->sendRequest($this->url);
+        
+        return $this->response;    
     }
 }

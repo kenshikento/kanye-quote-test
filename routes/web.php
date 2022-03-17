@@ -19,5 +19,5 @@ use Illuminate\Support\Facades\Route;
 });*/
 
 Route::get('/', function(){
-    return (New KanyeQuoteAPI)->randomizer();
+    return (New KanyeQuoteAPI)->randomizer(5);
 });

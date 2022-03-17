@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Services\KanyeQuoteAPI;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class KanyeServiceTest extends TestCase
 {
@@ -14,13 +15,19 @@ class KanyeServiceTest extends TestCase
      */
     public function test_api_returns_a_successful_response()
     {
-        $response = $this->get('/');
+        //$response = new Kanye
 
-        $response->assertStatus(200);
+        //$response->assertStatus(200);
     }
 
+    /**
+     * Test if the values that come from service are unique
+     *
+     * @return void
+     */
     public function test_randomizer_return_five_unique_results()
     {
-        //
+        $result = (new KanyeQuoteAPI())->randomizer(5);
+        $this->assertTrue($result->duplicates()->isEmpty()); 
     }
 }
