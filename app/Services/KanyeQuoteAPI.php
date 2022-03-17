@@ -5,7 +5,9 @@ namespace App\Services;
 use GuzzleHttp\Client;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Collection;
 
 class KanyeQuoteAPI
 {
@@ -34,7 +36,7 @@ class KanyeQuoteAPI
         }
     }
 
-    private function sendRequest($endpoint, $batch = false) : Response
+    private function sendRequest($endpoint, $batch = false)
     {
         return match($batch){
             true => $this->sendMultiRequest($endpoint),
@@ -47,24 +49,37 @@ class KanyeQuoteAPI
         return $this->client->get($endpoint);
     }
 
-    private function sendMultiRequest($endpoint) : Response
+    private function sendMultiRequest($endpoint) : Collection
     {
-        $requests = function($this->reqQuotes) use($endpoint) {
-            for ($i = 0; $i < $this->reqQuotes; $i++) {
-                yield new Request('GET', $uri);
+        $total = $this->reqQuotes;
+        $client = new Client();
+
+        $requests = function ($total) use ($endpoint){
+            for ($i = 0; $i < $total; $i++) {
+                yield new Request('GET', $endpoint);
             }
         };
+
+        $response = Pool::batch($client,$requests($total),['concurrency' => 5]);
+        return $this->processMultiResponse($response);
     }
 
-    public function randomizer(/*Int $quote*/): Collection 
+    /**
+     * Just processes the Response by json decoding then iterating through as a collection 
+     *
+     * @param array $items
+     * @return Collection
+     */
+    private function processMultiResponse(array $items) : Collection
+    {
+        return collect($items)->map(fn($q)=> json_decode($q->getBody())->quote);
+    }
+
+    public function randomizer(/*Int $quote*/) 
     {
         $this->reqQuotes = 5; 
 
         $result = $this->sendRequest($this->url, true);
-        if($result->getStatusCode() ) {
-            
-        }   
-        dd($result->isSuccesful());
-        dd(json_decode($result->getBody()));
+        dd($result);
     }
 }
