@@ -30,4 +30,13 @@ class KanyeServiceTest extends TestCase
         $result = (new KanyeQuoteAPI())->randomizer(5);
         $this->assertTrue($result->duplicates()->isEmpty()); 
     }
+
+    public function test_assert_status_code_failure()
+    {
+        $result = (new KanyeQuoteAPI('null'))->getStatusCode(1);
+        
+        dd($result);
+
+        $result[0] === 200 ? $this->assertTrue(true) : $this->assertTrue(false); 
+    }
 }
