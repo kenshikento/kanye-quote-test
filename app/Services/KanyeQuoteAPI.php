@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Pool;
-use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ConnectException;
 
 class KanyeQuoteAPI
 {
@@ -20,6 +21,8 @@ class KanyeQuoteAPI
     public Collection $response;
 
     private Collection $statusCodes;
+
+    private Collection $error;
     
     public function __construct($url = null) 
     {
@@ -58,10 +61,17 @@ class KanyeQuoteAPI
         };
 
         $response =  Pool::batch($client, $requests($total), ['concurrency' => 5]);
-        
+                
         $this->status = $this->setStatusResponse($response);
-        $this->response = $this->processMultiResponse($response);
 
+        if($this->error->isNotEmpty()){
+            $this->response = collect([]);
+            Log::info('Due To Connection Error');
+            return $this;
+        }
+
+        $this->response = $this->processMultiResponse($response);
+        
         return $this;
     }
 
@@ -84,7 +94,15 @@ class KanyeQuoteAPI
      */
     private function setStatusResponse(array $items) : Collection
     {
-        return collect($items)->map(fn($q)=> $q->getStatusCode());
+        //return collect($items)->map(fn($q)=> $q->getStatusCode());
+        return collect($items)->map(function($q){
+            if($q instanceof ConnectException){
+                $this->error[] = $q->getMessage();
+                return collect([]);
+            }
+
+            return $q->getStatusCode();
+        });
     }
 
     /**

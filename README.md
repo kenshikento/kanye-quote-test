@@ -11,4 +11,5 @@ pretty bare bones at the moment haven't really started.
 2. Use TDD
 3. make sure there is form of token 
 
-
+## Testing
+Using PHP Unit depending on how you have set up the project u can just use default php unit command line or in my case just sail alternate version.
