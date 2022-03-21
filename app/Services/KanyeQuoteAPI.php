@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 
 class KanyeQuoteAPI
 {
@@ -61,7 +62,7 @@ class KanyeQuoteAPI
         };
 
         $response =  Pool::batch($client, $requests($total), ['concurrency' => 5]);
-                
+
         $this->status = $this->setStatusResponse($response);
 
         if($this->error->isNotEmpty()){
@@ -87,16 +88,20 @@ class KanyeQuoteAPI
     }
 
     /**
-     * Sets all status codes into status
+     * Sets all status codes into status and add any exceptions into error logs
      *
      * @param array $items
      * @return Collection
      */
     private function setStatusResponse(array $items) : Collection
     {
-        //return collect($items)->map(fn($q)=> $q->getStatusCode());
         return collect($items)->map(function($q){
             if($q instanceof ConnectException){
+                $this->error[] = $q->getMessage();
+                return collect([]);
+            }
+
+            if($q instanceof RequestException){
                 $this->error[] = $q->getMessage();
                 return collect([]);
             }
