@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
+use Log;
 
 class KanyeQuoteAPI
 {
@@ -35,6 +36,12 @@ class KanyeQuoteAPI
         
         $this->client = app()->get(Client::class);
         $this->validateSetup();
+        $this->setErrors();
+    }
+
+    private function setErrors()
+    {
+        $this->error = collect([]);
     }
 
     /**
@@ -52,7 +59,6 @@ class KanyeQuoteAPI
     private function sendRequest() : self
     {
         $total = $this->reqQuotes;
-        $client = $this->client;
         $endpoint = $this->url;
 
         $requests = function ($total) use ($endpoint){
@@ -61,7 +67,7 @@ class KanyeQuoteAPI
             }
         };
 
-        $response =  Pool::batch($client, $requests($total), ['concurrency' => 5]);
+        $response =  Pool::batch($this->client, $requests($total), ['concurrency' => 5]);
 
         $this->status = $this->setStatusResponse($response);
 
@@ -97,12 +103,12 @@ class KanyeQuoteAPI
     {
         return collect($items)->map(function($q){
             if($q instanceof ConnectException){
-                $this->error[] = $q->getMessage();
+                $this->error->push($q->getMessage());
                 return collect([]);
             }
 
             if($q instanceof RequestException){
-                $this->error[] = $q->getMessage();
+                $this->error->push($q->getMessage());
                 return collect([]);
             }
 
@@ -126,7 +132,7 @@ class KanyeQuoteAPI
     {
         $this->reqQuotes = $total; 
         $this->sendRequest($this->url);
-        
+
         return $this->response;    
     }
 }
