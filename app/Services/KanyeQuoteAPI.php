@@ -37,6 +37,8 @@ class KanyeQuoteAPI
         $this->client = app()->get(Client::class);
         $this->validateSetup();
         $this->setErrors();
+
+        return $this;
     }
 
     private function setErrors()
@@ -56,7 +58,7 @@ class KanyeQuoteAPI
         }
     }
 
-    private function sendRequest() : self
+    public function sendRequest() : self
     {
         $total = $this->reqQuotes;
         $endpoint = $this->url;
@@ -72,9 +74,7 @@ class KanyeQuoteAPI
         $this->status = $this->setStatusResponse($response);
 
         if($this->error->isNotEmpty()){
-            $this->response = collect([]);
-            Log::info('Due To Connection Error');
-            return $this;
+            Log::info('Error Occurred');
         }
 
         $this->response = $this->processMultiResponse($response);
@@ -89,8 +89,11 @@ class KanyeQuoteAPI
      * @return Collection
      */
     private function processMultiResponse(array $items) : Collection
-    {
-        return collect($items)->map(fn(Response $q)=> json_decode($q->getBody())->quote);
+    {   
+        return collect($items)
+            ->reject(fn($q)=> $q instanceof ConnectException OR $q instanceof RequestException)
+            ->map(fn(Response $q)=> json_decode($q->getBody())->quote)
+        ;
     }
 
     /**
@@ -103,13 +106,13 @@ class KanyeQuoteAPI
     {
         return collect($items)->map(function($q){
             if($q instanceof ConnectException){
-                $this->error->push($q->getMessage());
-                return collect([]);
+                Log::info('Error Occurred with connection');
+                return $q->getMessage();
             }
 
             if($q instanceof RequestException){
-                $this->error->push($q->getMessage());
-                return collect([]);
+                Log::info('Error Occurred with Request');
+                return $q->getMessage();
             }
 
             return $q->getStatusCode();

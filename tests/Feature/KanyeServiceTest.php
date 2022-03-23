@@ -33,7 +33,7 @@ class KanyeServiceTest extends TestCase
 
     public function test_assert_status_code_failure()
     {
-        $result = (new KanyeQuoteAPI('null'))->getStatusCode(1);
+        $result = (new KanyeQuoteAPI('null'))->getStatusCode(5);
         
         dd($result);
 
