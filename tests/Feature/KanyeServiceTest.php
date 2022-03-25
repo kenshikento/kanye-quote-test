@@ -25,18 +25,21 @@ class KanyeServiceTest extends TestCase
      *
      * @return void
      */
-    public function test_randomizer_return_five_unique_results()
+    public function test_randomizer_return_five_unique_results() : void
     {
         $result = (new KanyeQuoteAPI())->randomizer(5);
         $this->assertTrue($result->duplicates()->isEmpty()); 
     }
 
-    public function test_assert_status_code_failure()
+    /**
+     * Test if status is connection failure so check if output is a status even
+     *
+     * @return void
+     */
+    public function test_assert_connection_status_code_failure() : void
     {
-        $result = (new KanyeQuoteAPI('null'))->getStatusCode(5);
-        
-        dd($result);
+        $result = (new KanyeQuoteAPI(' '))->getStatusCode(1);
 
-        $result[0] === 200 ? $this->assertTrue(true) : $this->assertTrue(false); 
+        $this->assertTrue($result->reject(fn($status)=> is_int($status))->isNotEmpty()); 
     }
 }

@@ -36,14 +36,8 @@ class KanyeQuoteAPI
         
         $this->client = app()->get(Client::class);
         $this->validateSetup();
-        $this->setErrors();
-
+        
         return $this;
-    }
-
-    private function setErrors()
-    {
-        $this->error = collect([]);
     }
 
     /**
@@ -58,8 +52,14 @@ class KanyeQuoteAPI
         }
     }
 
+    /**
+     * Method that sends request as Pool and so sets the conditions.
+     *
+     * @return self
+     */
     public function sendRequest() : self
     {
+        $client = $this->client;
         $total = $this->reqQuotes;
         $endpoint = $this->url;
 
@@ -69,13 +69,9 @@ class KanyeQuoteAPI
             }
         };
 
-        $response =  Pool::batch($this->client, $requests($total), ['concurrency' => 5]);
+        $response =  Pool::batch($client, $requests($total), ['concurrency' => 5]);
 
         $this->status = $this->setStatusResponse($response);
-
-        if($this->error->isNotEmpty()){
-            Log::info('Error Occurred');
-        }
 
         $this->response = $this->processMultiResponse($response);
         
@@ -111,8 +107,7 @@ class KanyeQuoteAPI
             }
 
             if($q instanceof RequestException){
-                Log::info('Error Occurred with Request');
-                return $q->getMessage();
+                return $q->getStatusCode();
             }
 
             return $q->getStatusCode();
@@ -131,6 +126,7 @@ class KanyeQuoteAPI
         return $this->status; 
     }
 
+    // technically it randomize itself from Api call
     public function randomizer(int $total) 
     {
         $this->reqQuotes = $total; 

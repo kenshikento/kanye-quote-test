@@ -7,7 +7,7 @@ Multiple ways of installing project since there isn't really much different from
 pretty bare bones at the moment haven't really started.
 
 ## Aims 
-1.Essentially get couple quotes off kanye quote website and randomize it. 
+1.Essentially get couple quotes off kanye quote website. 
 2. Use TDD
 3. make sure there is form of token 
 
@@ -17,3 +17,4 @@ pretty bare bones at the moment haven't really started.
 
 ## Testing
 Using PHP Unit depending on how you have set up the project u can just use default php unit command line or in my case just sail alternate version.
+``` sail artisan test``` to run all avaiable test even example ones. 
