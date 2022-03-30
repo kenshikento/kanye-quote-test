@@ -18,3 +18,4 @@ pretty bare bones at the moment haven't really started.
 ## Testing
 Using PHP Unit depending on how you have set up the project u can just use default php unit command line or in my case just sail alternate version.
 ``` sail artisan test``` to run all avaiable test even example ones. 
+-- Bare in mind that Api already Randomizes the results so one of test is pretty much useless.

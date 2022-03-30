@@ -23,17 +23,15 @@ class KanyeQuoteAPI
     public Collection $response;
 
     private Collection $statusCodes;
-
-    private Collection $error;
     
     public function __construct($url = null) 
     {
         $this->url = config('services.kanye.url');
-        
+
         if($url) {
             $this->url = $url;
         }
-        
+
         $this->client = app()->get(Client::class);
         $this->validateSetup();
         
@@ -57,10 +55,9 @@ class KanyeQuoteAPI
      *
      * @return self
      */
-    public function sendRequest() : self
+    public function sendRequest($total) : self
     {
         $client = $this->client;
-        $total = $this->reqQuotes;
         $endpoint = $this->url;
 
         $requests = function ($total) use ($endpoint){
@@ -127,11 +124,9 @@ class KanyeQuoteAPI
     }
 
     // technically it randomize itself from Api call
-    public function randomizer(int $total) 
-    {
-        $this->reqQuotes = $total; 
-        $this->sendRequest($this->url);
-
+    public function randomizer($total) 
+    { 
+        $this->sendRequest($total);
         return $this->response;    
     }
 }
